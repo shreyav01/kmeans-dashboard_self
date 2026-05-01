@@ -24,11 +24,11 @@
 Secured **🥈 2nd Place** at **TechSprint 2K25** — a 2-day Project Based Workshop on Machine Learning & AI organized by the Department of Computer Science (UG), Surana College – Autonomous, South End Campus on **27th & 28th February 2025**.
 
 <p align="center">
-  <img src="assets/trophy_cert.jpg" width="500" alt="Certificate and Trophy"/>
+  <img src="assets/trophy_cert.pdf" width="500" alt="Certificate and Trophy"/>
 </p>
 
 <p align="center">
-  <img src="assets/award_photo.jpg" width="700" alt="Award Ceremony"/>
+  <img src="assets/award_photo.jpeg" width="700" alt="Award Ceremony"/>
 </p>
 
 ---
