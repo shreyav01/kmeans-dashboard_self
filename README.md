@@ -35,7 +35,7 @@ Secured **🥈 2nd Place** at **TechSprint 2K25** — a 2-day Project Based Work
 
 ## 🌐 Live Demo
 
-👉 **[https://kmeans-self-1.onrender.com/](https://kmeans-self-1.onrender.com/)**
+👉 https://kmeans-dashboard-self.onrender.com
 
 > Note: Hosted on Render free tier — may take ~30 seconds to wake up on first visit.
 
