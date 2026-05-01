@@ -1,66 +1,431 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-Means Clustering</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #4e54c8, #8f94fb);
-            font-family: Arial, sans-serif;
-            color: white;
-            text-align: center;
-        }
-        h2 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        h3 {
-            font-size: 1.5rem;
-            margin-top: 20px;
-        }
-        img {
-            width: 70%;
-            max-width: 600px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            margin-top: 10px;
-        }
-        iframe {
-            width: 80%;
-            max-width: 800px;
-            height: 600px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            margin-top: 10px;
-            border: none;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 900px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>K-Means Clustering — Iris Dataset</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f172a;
+      --surface:  #1e293b;
+      --border:   #334155;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
+      --accent:   #6366f1;
+      --green:    #10b981;
+      --yellow:   #f59e0b;
+      --red:      #ef4444;
+      --cluster0: #6366f1;
+      --cluster1: #10b981;
+      --cluster2: #f59e0b;
+      --cluster3: #ef4444;
+      --cluster4: #ec4899;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 1.1rem;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 700; }
+    header span { color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+
+    /* ── Layout ── */
+    .container { max-width: 1300px; margin: 0 auto; padding: 2rem; }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Control bar ── */
+    .control-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .control-bar label { font-size: 0.9rem; color: var(--muted); white-space: nowrap; }
+    .slider-wrap { display: flex; align-items: center; gap: 1rem; flex: 1; }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%; max-width: 320px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .k-badge {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: .25rem .75rem;
+      border-radius: 8px;
+      min-width: 42px;
+      text-align: center;
+    }
+    .sil-badge {
+      margin-left: auto;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .sil-badge .label { font-size: 0.8rem; color: var(--muted); }
+    .sil-badge .value {
+      font-size: 1rem; font-weight: 700; color: var(--green);
+    }
+    .apply-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .55rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .apply-btn:hover { opacity: .85; }
+    .apply-btn:disabled { opacity: .5; cursor: default; }
+
+    /* ── Stat cards ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      border-left: 4px solid var(--cluster0);
+      transition: transform .15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card.c0 { border-left-color: var(--cluster0); }
+    .stat-card.c1 { border-left-color: var(--cluster1); }
+    .stat-card.c2 { border-left-color: var(--cluster2); }
+    .stat-card.c3 { border-left-color: var(--cluster3); }
+    .stat-card.c4 { border-left-color: var(--cluster4); }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: .75rem;
+    }
+    .card-header .name { font-weight: 700; font-size: .95rem; }
+    .card-header .count {
+      font-size: .75rem; color: var(--muted);
+      background: var(--bg);
+      padding: .15rem .5rem;
+      border-radius: 99px;
+    }
+    .card-row {
+      display: flex; justify-content: space-between;
+      font-size: .8rem; color: var(--muted);
+      padding: .2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-row:last-child { border-bottom: none; }
+    .card-row .val { color: var(--text); font-weight: 600; }
+
+    /* ── Plots grid ── */
+    .plots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 860px) { .plots-grid { grid-template-columns: 1fr; } }
+
+    .plot-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .plot-card .plot-title {
+      padding: .9rem 1.25rem;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .plot-card img {
+      width: 100%; display: block;
+    }
+    .plot-card iframe {
+      width: 100%; height: 420px; border: none; display: block;
+    }
+
+    /* ── Elbow full-width ── */
+    .plot-full {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .plot-full .plot-title {
+      padding: .9rem 1.25rem;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .plot-full .plot-title .tag {
+      background: var(--yellow);
+      color: #000;
+      font-size: .65rem;
+      font-weight: 700;
+      padding: .15rem .5rem;
+      border-radius: 99px;
+    }
+    .plot-full img { width: 100%; display: block; }
+
+    /* ── Concept cards ── */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .concept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .concept-card h3 {
+      font-size: .9rem;
+      font-weight: 700;
+      margin-bottom: .6rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .concept-card h3 .icon {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: grid; place-items: center;
+      font-size: .85rem;
+    }
+    .concept-card p { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Loading overlay ── */
+    #loading {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.7);
+      z-index: 99;
+      place-items: center;
+    }
+    #loading.active { display: grid; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: .8rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
 </head>
 <body>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<header>
+  <div class="logo">🔵</div>
+  <h1>K-Means Clustering</h1>
+  <span>Iris Dataset · scikit-learn · Flask</span>
+</header>
+
 <div class="container">
-        <h2>K-Means Clustering on Iris Dataset</h2>
-        <h3>2D Scatter Plot</h3>
-        <img src="{{ url_for('static', filename='plot_2d.png') }}" alt="2D Cluster Plot">
-        
-        <h3>Interactive 3D Scatter Plot</h3>
-        <iframe src="{{ url_for('static', filename='plot_3d.html') }}"></iframe>
+
+  <!-- ── Control Bar ── -->
+  <p class="section-title">Interactive Controls</p>
+  <div class="control-bar">
+    <label>Number of Clusters (K)</label>
+    <div class="slider-wrap">
+      <input type="range" id="kSlider" min="2" max="8" value="{{ current_k }}"
+             oninput="document.getElementById('kVal').textContent=this.value">
+      <div class="k-badge" id="kVal">{{ current_k }}</div>
     </div>
+    <button class="apply-btn" onclick="recluster()">Apply</button>
+    <div class="sil-badge">
+      <span class="label">Silhouette Score</span>
+      <span class="value" id="silScore">{{ silhouette }}</span>
+    </div>
+  </div>
+
+  <!-- ── Cluster Stat Cards ── -->
+  <p class="section-title">Cluster Summary</p>
+  <div class="stat-grid" id="statGrid">
+    {% for s in cluster_stats %}
+    <div class="stat-card c{{ s.cluster }}">
+      <div class="card-header">
+        <span class="name">Cluster {{ s.cluster }}</span>
+        <span class="count">{{ s.count }} samples · {{ s.pct }}%</span>
+      </div>
+      <div class="card-row"><span>Sepal Length</span><span class="val">{{ s['sepal length (cm)_mean'] }} cm</span></div>
+      <div class="card-row"><span>Sepal Width</span> <span class="val">{{ s['sepal width (cm)_mean'] }} cm</span></div>
+      <div class="card-row"><span>Petal Length</span><span class="val">{{ s['petal length (cm)_mean'] }} cm</span></div>
+      <div class="card-row"><span>Petal Width</span> <span class="val">{{ s['petal width (cm)_mean'] }} cm</span></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── 2D and 3D Plots ── -->
+  <p class="section-title">Visualizations</p>
+  <div class="plots-grid">
+    <div class="plot-card">
+      <div class="plot-title">2D Scatter — Sepal Length vs Sepal Width</div>
+      <img id="plot2d" src="/static/plot_2d.png?t={{ range(99999) | random }}" alt="2D Plot">
+    </div>
+    <div class="plot-card">
+      <div class="plot-title">3D Interactive Scatter</div>
+      <iframe id="plot3d" src="/static/plot_3d.html"></iframe>
+    </div>
+  </div>
+
+  <!-- ── Elbow Method ── -->
+  <div class="plot-full">
+    <div class="plot-title">
+      Elbow Method + Silhouette Score
+      <span class="tag">Helps choose optimal K</span>
+    </div>
+    <img src="/static/plot_elbow.png" alt="Elbow Chart">
+  </div>
+
+  <!-- ── Concept Cards ── -->
+  <p class="section-title">Key Concepts</p>
+  <div class="concept-grid">
+    <div class="concept-card">
+      <h3><span class="icon">🔵</span>What is K-Means?</h3>
+      <p>An unsupervised algorithm that groups data into K clusters by minimizing intra-cluster distance. It iterates: assign points → recompute centroids → repeat until convergence.</p>
+    </div>
+    <div class="concept-card">
+      <h3><span class="icon">📐</span>Standardization</h3>
+      <p>We apply <code>StandardScaler</code> before clustering so all features have mean=0 and std=1. This ensures no single feature dominates due to scale differences.</p>
+    </div>
+    <div class="concept-card">
+      <h3><span class="icon">📊</span>Elbow Method</h3>
+      <p>Plot inertia (WCSS) vs K. The "elbow" — where improvement slows — indicates the optimal number of clusters. For Iris, K=3 is the clear bend.</p>
+    </div>
+    <div class="concept-card">
+      <h3><span class="icon">✅</span>Silhouette Score</h3>
+      <p>Measures how well-separated clusters are. Ranges from -1 to 1 — higher is better. A score above 0.5 indicates reasonable cluster structure.</p>
+    </div>
+    <div class="concept-card">
+      <h3><span class="icon">🌸</span>Iris Dataset</h3>
+      <p>150 flowers across 3 species (Setosa, Versicolor, Virginica). Four features: sepal length/width and petal length/width. A classic ML benchmark dataset.</p>
+    </div>
+    <div class="concept-card">
+      <h3><span class="icon">🌐</span>3D Visualization</h3>
+      <p>Plotly renders an interactive 3D scatter using sepal length, sepal width, and petal length. Rotate the chart to explore cluster separation from different angles.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Built with Flask · scikit-learn · Matplotlib · Seaborn · Plotly &nbsp;|&nbsp; Iris Dataset
+</footer>
+
+<script>
+  function recluster() {
+    const k = document.getElementById('kSlider').value;
+    document.getElementById('loading').classList.add('active');
+    document.querySelector('.apply-btn').disabled = true;
+
+    fetch(`/recluster?k=${k}`)
+      .then(r => r.json())
+      .then(data => {
+        // update silhouette score
+        document.getElementById('silScore').textContent = data.silhouette;
+
+        // rebuild stat cards
+        const colors = ['c0','c1','c2','c3','c4'];
+        const features = [
+          ['Sepal Length', 'sepal length (cm)_mean'],
+          ['Sepal Width',  'sepal width (cm)_mean'],
+          ['Petal Length', 'petal length (cm)_mean'],
+          ['Petal Width',  'petal width (cm)_mean'],
+        ];
+        const grid = document.getElementById('statGrid');
+        grid.innerHTML = data.cluster_stats.map(s => `
+          <div class="stat-card ${colors[s.cluster] || 'c0'}">
+            <div class="card-header">
+              <span class="name">Cluster ${s.cluster}</span>
+              <span class="count">${s.count} samples · ${s.pct}%</span>
+            </div>
+            ${features.map(([label, key]) => `
+              <div class="card-row"><span>${label}</span><span class="val">${s[key]} cm</span></div>
+            `).join('')}
+          </div>
+        `).join('');
+
+        // reload plots with cache-bust
+        const ts = Date.now();
+        document.getElementById('plot2d').src = `/static/plot_2d.png?t=${ts}`;
+        document.getElementById('plot3d').src  = `/static/plot_3d.html?t=${ts}`;
+      })
+      .finally(() => {
+        document.getElementById('loading').classList.remove('active');
+        document.querySelector('.apply-btn').disabled = false;
+      });
+  }
+</script>
+
 </body>
 </html>
